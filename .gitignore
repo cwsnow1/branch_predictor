@@ -1,0 +1,5 @@
+*.o
+predictor
+build/
+
+*.txt

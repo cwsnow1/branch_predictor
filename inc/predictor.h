@@ -15,6 +15,9 @@ typedef struct stats_s {
     uint64_t taken_count;
     uint64_t not_taken_count;
     uint64_t mispredict_count[2];
+    uint64_t num_counters;
+    uint8_t counter_size_in_bits;
+    uint8_t history_length;
 } stats_t;
 
 typedef struct counter_s {
@@ -24,12 +27,18 @@ typedef struct counter_s {
 } counter_t;
 
 typedef struct predictor_s {
-    uint64_t counter_index_mask;
+    uint64_t pc_mask;
+    uint64_t history_register;
+    uint64_t history_mask;
+    uint8_t pc_bits;
+    uint8_t g_shared_bits;
     counter_t counters;
     stats_t stats;
 } predictor_t;
 
-void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits);
+void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits, uint8_t history_length, uint8_t g_shared_bits);
+
+void predictor__reset(predictor_t* me);
 
 void predictor__print_stats(predictor_t *me);
 

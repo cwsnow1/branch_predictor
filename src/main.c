@@ -88,13 +88,14 @@ int main (int argc, char** argv) {
     uint64_t num_branches = file_length / FILE_LINE_LENGTH_IN_BYTES;
     branch_t *branches = parse_file_contents(buffer, num_branches);
     predictor_t predictor;
-    predictor__init(&predictor, 256, 2);
+    predictor__init(&predictor, 512, 2, 0, 0);
     for (uint64_t i = 0; i < num_branches; i++) {
         bool taken = predictor__make_prediction(&predictor, branches[i].pc, branches[i].hint);
         predictor__update_stats(&predictor, taken, branches[i].taken);
         predictor__update_predictor(&predictor, branches[i].pc, branches[i].taken);
     }
     predictor__print_stats(&predictor);
+    predictor__reset(&predictor);
 
     free(branches);
     return 0;

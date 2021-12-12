@@ -28,7 +28,7 @@ VOID RecordPrevBranch(VOID* ip) {
         taken = true;
     }
     char taken_char = taken ? 'T' : 'F';
-    fprintf(trace, "%p: taken %c, hint %d\n", branch_ip, taken_char, static_cast<int>(taken_hint));
+    fprintf(trace, "%012lx: taken %c, hint %d\n", reinterpret_cast<long unsigned>(branch_ip), taken_char, static_cast<int>(taken_hint));
 }
 
 // Is called for every instruction and records branches and instruction immediately after branches

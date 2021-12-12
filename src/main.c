@@ -6,8 +6,7 @@
 
 #include "predictor.h"
 
-#define FILE_LINE_LENGTH_IN_BYTES   (32)
-#define LINE_START                  (2)
+#define FILE_LINE_LENGTH_IN_BYTES   (30)
 #define PC_TO_TAKEN                 (8)
 #define TAKEN_TO_HINT               (8)
 
@@ -45,14 +44,13 @@ error:
 }
 
 void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
-    line += LINE_START;
     char *end = NULL;
     *pc = strtoul((char*) line, &end, 16);
     assert(*end == ':');
     line = (uint8_t*) end + PC_TO_TAKEN;
     *taken = *line == 'T';
     line += TAKEN_TO_HINT;
-    *hint = (hint_t) *line;
+    *hint = (hint_t) (*line - '0');
 }
 
 /**
@@ -60,12 +58,11 @@ void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
  *  PC: taken T/F
  */
 
-branch_t * parse_file_contents(uint8_t * buffer, uint64_t length_in_bytes) {
-    branch_t *branches = (branch_t*) malloc(sizeof(branch_t) * length_in_bytes);
+branch_t * parse_file_contents(uint8_t * buffer, uint64_t num_branches) {
+    branch_t *branches = (branch_t*) malloc(sizeof(branch_t) * num_branches);
     if (branches == NULL) {
-        fprintf(stderr, "malloc failed. %luB may be too much memory\n", length_in_bytes);
+        fprintf(stderr, "malloc failed. %luB may be too much memory\n", num_branches * FILE_LINE_LENGTH_IN_BYTES);
     }
-    uint64_t num_branches = length_in_bytes / FILE_LINE_LENGTH_IN_BYTES;
     uint8_t * buffer_start = buffer;
     for (uint64_t i = 0; i < num_branches; i++, buffer += FILE_LINE_LENGTH_IN_BYTES) {
         parse_line(buffer, &branches[i].pc, &branches[i].taken, &branches[i].hint);
@@ -88,8 +85,16 @@ int main (int argc, char** argv) {
     uint64_t file_length = 0;
     uint8_t *buffer = read_in_file(argv[1], &file_length);
     assert(file_length);
-    branch_t *branches = parse_file_contents(buffer, file_length);
-    printf("branch 0: 0x%lx: %u\n", branches[0].pc, branches[0].taken ? 1 : 0);
+    uint64_t num_branches = file_length / FILE_LINE_LENGTH_IN_BYTES;
+    branch_t *branches = parse_file_contents(buffer, num_branches);
+    predictor_t predictor;
+    predictor__init(&predictor, 256, 2);
+    for (uint64_t i = 0; i < num_branches; i++) {
+        bool taken = predictor__make_prediction(&predictor, branches[i].pc, branches[i].hint);
+        predictor__update_stats(&predictor, taken, branches[i].taken);
+        predictor__update_predictor(&predictor, branches[i].pc, branches[i].taken);
+    }
+    predictor__print_stats(&predictor);
 
     free(branches);
     return 0;

@@ -26,7 +26,7 @@ INCLUDES = -I../inc
 # LIBS = -lpthread
 
 # define the C source files
-SRCS = ./main.c
+SRCS = ./main.c ./predictor.c
 
 # define the C object files 
 #

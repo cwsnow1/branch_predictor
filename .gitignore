@@ -3,3 +3,5 @@ predictor
 build/
 
 *.txt
+
+.vscode/

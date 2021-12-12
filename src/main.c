@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 
 #include "predictor.h"
 
@@ -83,19 +84,27 @@ int main (int argc, char** argv) {
         usage();
     }
     uint64_t file_length = 0;
+    clock_t t = clock();
     uint8_t *buffer = read_in_file(argv[1], &file_length);
     assert(file_length);
     uint64_t num_branches = file_length / FILE_LINE_LENGTH_IN_BYTES;
     branch_t *branches = parse_file_contents(buffer, num_branches);
+    t = clock() - t;
+    double elapsed_time = (double) t / CLOCKS_PER_SEC;
+    printf("File reading and parsing took %.4f seconds\n", elapsed_time);
     predictor_t predictor;
-    predictor__init(&predictor, 512, 2, 0, 0);
+    t = clock();
+    predictor__init(&predictor, 512, 2, 2, 2);
     for (uint64_t i = 0; i < num_branches; i++) {
         bool taken = predictor__make_prediction(&predictor, branches[i].pc, branches[i].hint);
         predictor__update_stats(&predictor, taken, branches[i].taken);
         predictor__update_predictor(&predictor, branches[i].pc, branches[i].taken);
     }
+    t = clock() - t;
     predictor__print_stats(&predictor);
     predictor__reset(&predictor);
+    elapsed_time = (double) t / CLOCKS_PER_SEC;
+    printf("Simulation took %.4f seconds\n", elapsed_time);
 
     free(branches);
     return 0;

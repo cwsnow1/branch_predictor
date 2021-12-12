@@ -6,9 +6,10 @@
 
 #include "predictor.h"
 
-#define FILE_LINE_LENGTH_IN_BYTES   (24)
+#define FILE_LINE_LENGTH_IN_BYTES   (32)
 #define LINE_START                  (2)
 #define PC_TO_TAKEN                 (8)
+#define TAKEN_TO_HINT               (8)
 
 static uint8_t * read_in_file (const char* filename, uint64_t *length) {
     assert(length);
@@ -43,13 +44,15 @@ error:
     exit(1);
 }
 
-void parse_line (uint8_t *line, uint64_t *pc, bool *taken) {
+void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
     line += LINE_START;
     char *end = NULL;
     *pc = strtoul((char*) line, &end, 16);
     assert(*end == ':');
     line = (uint8_t*) end + PC_TO_TAKEN;
     *taken = *line == 'T';
+    line += TAKEN_TO_HINT;
+    *hint = (hint_t) *line;
 }
 
 /**
@@ -65,7 +68,7 @@ branch_t * parse_file_contents(uint8_t * buffer, uint64_t length_in_bytes) {
     uint64_t num_branches = length_in_bytes / FILE_LINE_LENGTH_IN_BYTES;
     uint8_t * buffer_start = buffer;
     for (uint64_t i = 0; i < num_branches; i++, buffer += FILE_LINE_LENGTH_IN_BYTES) {
-        parse_line(buffer, &branches[i].pc, &branches[i].taken);
+        parse_line(buffer, &branches[i].pc, &branches[i].taken, &branches[i].hint);
     }
     free(buffer_start);
     return branches;
@@ -86,7 +89,7 @@ int main (int argc, char** argv) {
     uint8_t *buffer = read_in_file(argv[1], &file_length);
     assert(file_length);
     branch_t *branches = parse_file_contents(buffer, file_length);
-    printf("branch 0: 0x%lx: %u", branches[0].pc, branches[0].taken ? 1 : 0);
+    printf("branch 0: 0x%lx: %u\n", branches[0].pc, branches[0].taken ? 1 : 0);
 
     free(branches);
     return 0;

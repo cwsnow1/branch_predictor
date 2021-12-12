@@ -44,7 +44,7 @@ error:
     exit(1);
 }
 
-void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
+static void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
     char *end = NULL;
     *pc = strtoul((char*) line, &end, 16);
     assert(*end == ':');
@@ -59,7 +59,7 @@ void parse_line (uint8_t *line, uint64_t *pc, bool *taken, hint_t *hint) {
  *  PC: taken T/F
  */
 
-branch_t * parse_file_contents(uint8_t * buffer, uint64_t num_branches) {
+static branch_t * parse_file_contents(uint8_t * buffer, uint64_t num_branches) {
     branch_t *branches = (branch_t*) malloc(sizeof(branch_t) * num_branches);
     if (branches == NULL) {
         fprintf(stderr, "malloc failed. %luB may be too much memory\n", num_branches * FILE_LINE_LENGTH_IN_BYTES);
@@ -73,28 +73,33 @@ branch_t * parse_file_contents(uint8_t * buffer, uint64_t num_branches) {
 }
 
 
-void usage (void) {
+static void usage (void) {
     fprintf(stderr, "Usage: ./predictor tracefile\n");
 }
 
 
 int main (int argc, char** argv) {
+
     if (argc < 2) {
         fprintf(stderr, "Not enough arguments\n");
         usage();
     }
-    uint64_t file_length = 0;
+
     clock_t t = clock();
+
+    uint64_t file_length = 0;
     uint8_t *buffer = read_in_file(argv[1], &file_length);
     assert(file_length);
     uint64_t num_branches = file_length / FILE_LINE_LENGTH_IN_BYTES;
     branch_t *branches = parse_file_contents(buffer, num_branches);
+
     t = clock() - t;
     double elapsed_time = (double) t / CLOCKS_PER_SEC;
     printf("File reading and parsing took %.4f seconds\n", elapsed_time);
+
     predictor_t predictor;
-    t = clock();
     predictor__init(&predictor, 512, 2, 2, 2);
+    t = clock();
     for (uint64_t i = 0; i < num_branches; i++) {
         bool taken = predictor__make_prediction(&predictor, branches[i].pc, branches[i].hint);
         predictor__update_stats(&predictor, taken, branches[i].taken);
@@ -103,9 +108,10 @@ int main (int argc, char** argv) {
     t = clock() - t;
     predictor__print_stats(&predictor);
     predictor__reset(&predictor);
+    free(branches);
+
     elapsed_time = (double) t / CLOCKS_PER_SEC;
     printf("Simulation took %.4f seconds\n", elapsed_time);
 
-    free(branches);
     return 0;
 }

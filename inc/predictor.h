@@ -24,7 +24,7 @@ typedef struct counter_s {
 } counter_t;
 
 typedef struct predictor_s {
-    uint8_t counter_index_mask;
+    uint64_t counter_index_mask;
     counter_t counters;
     stats_t stats;
 } predictor_t;

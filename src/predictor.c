@@ -29,6 +29,9 @@ void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_siz
 }
 
 void predictor__print_stats(predictor_t *me) {
+    uint8_t counter_size_in_bits = 0;
+    for (uint8_t tmp = me->counters.max_value + 1; (tmp & 1) == 0; tmp >>=1, counter_size_in_bits++);
+    printf("Number of counters: %lu, number of bits in counter: %hhu\n", me->counter_index_mask + 1, counter_size_in_bits);
     float mispredict_rate_not_taken = (float) me->stats.mispredict_count[0] / (float) me->stats.not_taken_count;
     float mispredict_rate_taken = (float) me->stats.mispredict_count[1] / (float) me->stats.taken_count;
     float total_mispredict_rate = (float) (me->stats.mispredict_count[0] + me->stats.mispredict_count[1]) / (float) (me->stats.taken_count + me->stats.not_taken_count);

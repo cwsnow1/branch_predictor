@@ -20,6 +20,7 @@ cp $WD/branch_tool.cpp $PIN_PATH/source/tools/ManualExamples
 cd $PIN_PATH/source/tools/ManualExamples
 make branch_tool.test TARGET=intel64
 cd $WD
-$PIN_PATH/pin -t $PIN_PATH/source/tools/ManualExamples/obj-intel64/branch_tool.so -- ./build.sh -c
-mv branch.out build.txt
-./predictor build.txt
+$PIN_PATH/pin -t $PIN_PATH/source/tools/ManualExamples/obj-intel64/branch_tool.so -- ls -l
+mv branch.out ls-l.txt
+./build.sh
+./predictor ls-l.txt

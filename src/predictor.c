@@ -7,7 +7,7 @@
 
 #include "predictor.h"
 
-void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits, uint8_t history_length, uint8_t g_shared_bits) {
+void predictor__init (predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits, uint8_t history_length, uint8_t g_shared_bits) {
     // Assert all values that need be non-zero are so
     assert(me);
     assert(counter_size_in_bits);
@@ -45,7 +45,7 @@ void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_siz
     me->counters.taken_threshold = 1 << (counter_size_in_bits - 1);
 }
 
-void predictor__reset(predictor_t *me) {
+void predictor__reset (predictor_t *me) {
     if (me) {
         if (me->counters.counters) {
             free(me->counters.counters);
@@ -54,7 +54,7 @@ void predictor__reset(predictor_t *me) {
     }
 }
 
-void predictor__print_stats(predictor_t *me) {
+void predictor__print_stats (predictor_t *me) {
     printf("Number of counters: %lu, number of bits in counter: %hhu\n", me->stats.num_counters, me->stats.counter_size_in_bits);
     printf("Global history register length: %hhu bit(s), %hhu shared bit(s)\n", me->stats.history_length, me->g_shared_bits);
     float mispredict_rate_not_taken = (float) me->stats.mispredict_count[0] / (float) me->stats.not_taken_count;
@@ -71,7 +71,7 @@ void predictor__print_stats(predictor_t *me) {
  * @param me    Instance of predictor
  * @param taken Outcome of the last branch
  */
-static inline void update_history(predictor_t *me, bool taken) {
+static inline void update_history (predictor_t *me, bool taken) {
     uint64_t new_value = taken ? 1 : 0; // unnecessary if bools are only 1 or 0, but I think true is any non zero value
     // shift left, OR in new value, cut off the MSB by ANDing the mask
     me->history_register = ((me->history_register << 1) | new_value) & me->history_mask;
@@ -84,13 +84,13 @@ static inline void update_history(predictor_t *me, bool taken) {
  * @param pc    Program counter of branch instruction
  * @return      Index into predictor's counters
  */
-static inline uint64_t calculate_counter_index(predictor_t *me, uint64_t pc) {
+static inline uint64_t calculate_counter_index (predictor_t *me, uint64_t pc) {
     uint64_t g_history_component = me->history_register << me->pc_bits;
     uint64_t pc_component = pc & me->pc_mask;
     return g_history_component ^ pc_component;
 }
 
-bool predictor__make_prediction(predictor_t *me, uint64_t pc, hint_t hint) {
+bool predictor__make_prediction (predictor_t *me, uint64_t pc, hint_t hint) {
     if (hint == NO_HINT) {
         bool taken = false;
         uint64_t index = calculate_counter_index(me, pc);
@@ -103,7 +103,7 @@ bool predictor__make_prediction(predictor_t *me, uint64_t pc, hint_t hint) {
     }
 }
 
-void predictor__update_stats(predictor_t *me, bool prediction, bool actual) {
+void predictor__update_stats (predictor_t *me, bool prediction, bool actual) {
     uint8_t index_to_stats = 0;
     if (actual) {
         index_to_stats = 1;
@@ -116,7 +116,7 @@ void predictor__update_stats(predictor_t *me, bool prediction, bool actual) {
     }
 }
 
-void predictor__update_predictor(predictor_t *me, uint64_t pc, bool taken) {
+void predictor__update_predictor (predictor_t *me, uint64_t pc, bool taken) {
     uint64_t index = calculate_counter_index(me, pc); // NOTE: this assumes that the calculated index will be the same as when the prediction was made
     if (taken) {
         if (me->counters.counters[index] != me->counters.max_value) {

@@ -45,21 +45,21 @@ typedef struct predictor_s {
  * @param history_length        Number of previous branches to keep track of for making predictions
  * @param g_shared_bits         Number of the history bits to XOR into the PC to index into the counters
  */
-void predictor__init(predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits, uint8_t history_length, uint8_t g_shared_bits);
+void predictor__init (predictor_t *me, uint64_t num_counters, uint8_t counter_size_in_bits, uint8_t history_length, uint8_t g_shared_bits);
 
 /**
  * @brief       Resets the predictor structure and frees any memory it has allocated
  * 
  * @param me    Instance of branch predictor
  */
-void predictor__reset(predictor_t* me);
+void predictor__reset (predictor_t* me);
 
 /**
  * @brief       Print the configuration and statistics gathered over a simulation for the given predictor instance
  * 
  * @param me    Branch predictor instance
  */
-void predictor__print_stats(predictor_t *me);
+void predictor__print_stats (predictor_t *me);
 
 /**
  * @brief       Gives a prediction for the given branch
@@ -78,7 +78,7 @@ bool predictor__make_prediction(predictor_t *me, uint64_t pc, hint_t hint);
  * @param prediction    What the predictor as given by predictor
  * @param actual        Actual outcome as given by the tracefile
  */
-void predictor__update_stats(predictor_t *me, bool prediction, bool actual);
+void predictor__update_stats (predictor_t *me, bool prediction, bool actual);
 
 /**
  * @brief       Updates the predictor's data after the outcome of a branch is known
@@ -87,4 +87,4 @@ void predictor__update_stats(predictor_t *me, bool prediction, bool actual);
  * @param pc    Program counter of branch instruction
  * @param taken Whether the branch was actually taken
  */
-void predictor__update_predictor(predictor_t *me, uint64_t pc, bool taken);
+void predictor__update_predictor (predictor_t *me, uint64_t pc, bool taken);
